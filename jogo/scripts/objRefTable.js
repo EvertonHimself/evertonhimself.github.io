@@ -1,0 +1,71 @@
+const C3 = self.C3;
+self.C3_GetObjectRefTable = function () {
+	return [
+		C3.Plugins.Sprite,
+		C3.Behaviors.Platform,
+		C3.Behaviors.scrollto,
+		C3.Behaviors.Pin,
+		C3.Behaviors.Physics,
+		C3.Behaviors.solid,
+		C3.Plugins.Keyboard,
+		C3.Plugins.TiledBg,
+		C3.Behaviors.Bullet,
+		C3.Plugins.Particles,
+		C3.Plugins.Keyboard.Cnds.IsKeyDown,
+		C3.Behaviors.Platform.Acts.SimulateControl,
+		C3.Plugins.Keyboard.Cnds.OnKey,
+		C3.Plugins.System.Cnds.EveryTick,
+		C3.Behaviors.Pin.Acts.PinByImagePoint,
+		C3.Plugins.Sprite.Acts.Spawn,
+		C3.Behaviors.Bullet.Acts.SetSpeed,
+		C3.Behaviors.Bullet.Exps.Speed,
+		C3.Plugins.Sprite.Cnds.OnCollision,
+		C3.Plugins.System.Acts.Wait,
+		C3.Plugins.Particles.Acts.Destroy,
+		C3.Plugins.TiledBg.Acts.SetX,
+		C3.Plugins.Sprite.Exps.X,
+		C3.Plugins.TiledBg.Acts.SetY,
+		C3.Plugins.Sprite.Exps.Y,
+		C3.Plugins.TiledBg.Acts.SetAngle,
+		C3.Plugins.TiledBg.Exps.X,
+		C3.Plugins.TiledBg.Exps.Y,
+		C3.Plugins.TiledBg.Acts.SetWidth
+	];
+};
+self.C3_JsPropNameTable = [
+	{Plataforma: 0},
+	{CentrarEm: 0},
+	{Fixar: 0},
+	{Física: 0},
+	{player1: 0},
+	{player2: 0},
+	{Sólido: 0},
+	{chao: 0},
+	{Teclado: 0},
+	{corda: 0},
+	{chao2: 0},
+	{player3: 0},
+	{parede: 0},
+	{cordaBG: 0},
+	{Projétil: 0},
+	{tirop1: 0},
+	{tirop2: 0},
+	{Partículas: 0},
+	{Partículas2: 0}
+];
+
+self.InstanceType = {
+	player1: class extends self.ISpriteInstance {},
+	player2: class extends self.ISpriteInstance {},
+	chao: class extends self.ISpriteInstance {},
+	Teclado: class extends self.IInstance {},
+	corda: class extends self.ISpriteInstance {},
+	chao2: class extends self.ISpriteInstance {},
+	player3: class extends self.ISpriteInstance {},
+	parede: class extends self.ISpriteInstance {},
+	cordaBG: class extends self.ITiledBackgroundInstance {},
+	tirop1: class extends self.ISpriteInstance {},
+	tirop2: class extends self.ISpriteInstance {},
+	Partículas: class extends self.IParticlesInstance {},
+	Partículas2: class extends self.IParticlesInstance {}
+}
