@@ -37,7 +37,7 @@ figcaption {
     margin-right: auto;
 }
 
-.criadores 
+.criadores
 {
     width: 275px;
     float: right;
@@ -46,4 +46,10 @@ figcaption {
 figure img 
 {
     width: 100%;
+}
+
+.logo {
+    width: 100px;
+    float: left;
+    display: block;
 }
