@@ -590,13 +590,125 @@
     border: 1px solid var(--border);
   }
 
-  @media (max-width: 700px) {
-    :root { --sidebar-w: 260px; }
-    .reading-inner { padding: 28px 18px 60px; }
+  /* ── MOBILE SIDEBAR OVERLAY ── */
+  .sidebar-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 9;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+  .sidebar-backdrop.open {
+    display: block;
+    opacity: 1;
+  }
+
+  /* ── MOBILE BOTTOM BAR ── */
+  .mobile-bar {
+    display: none;
+  }
+
+  @media (max-width: 640px) {
+    :root { --sidebar-w: 0px; }
+
+    html, body { overflow: hidden; }
+
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      width: 300px;
+      transform: translateX(-100%);
+      z-index: 10;
+      box-shadow: 6px 0 32px rgba(0,0,0,0.13);
+    }
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .welcome-screen {
+      left: 0;
+      padding: 16px;
+      align-items: flex-start;
+      overflow-y: auto;
+      padding-top: 72px;
+    }
+    .welcome-card {
+      width: 100%;
+      max-width: 100%;
+      padding: 24px 20px;
+      border-radius: 16px;
+    }
+    .welcome-card h1 { font-size: 22px; }
+    .welcome-card p { font-size: 13.5px; margin-bottom: 18px; }
+    .welcome-icon { width: 52px; height: 52px; margin-bottom: 14px; }
+
+    .paste-area { min-height: 110px; font-size: 13px; }
+    .drop-zone { padding: 12px; }
+
+    .welcome-actions { flex-direction: column; gap: 8px; }
+    .welcome-actions .btn-pill { padding: 12px; font-size: 14px; }
+
+    .reading-progress { left: 0; }
+
+    .topbar {
+      padding: 0 14px;
+      gap: 8px;
+    }
+    .topbar-title { font-size: 13px; }
+    #word-count { display: none; }
+
+    .reading-inner {
+      padding: 24px 18px 100px;
+    }
+
+    /* Mobile bottom bar */
+    .mobile-bar {
+      display: flex;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 58px;
+      background: var(--sidebar-bg);
+      border-top: 1px solid var(--border);
+      z-index: 8;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 8px;
+    }
+    .mobile-bar-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      padding: 6px 4px;
+      border-radius: 10px;
+      color: var(--text-tertiary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .mobile-bar-btn:active { background: var(--accent-light); color: var(--accent); }
+    .mobile-bar-btn svg { width: 22px; height: 22px; }
+    .mobile-bar-btn.primary-action { color: var(--accent); }
+
+    .tb-btn span { display: none; }
+    .tb-btn { padding: 8px 10px; }
+  }
+
+  @media (max-width: 380px) {
+    .sidebar { width: 280px; }
+    .welcome-card { padding: 20px 16px; }
+    .font-grid { grid-template-columns: 1fr 1fr; }
   }
 </style>
 </head>
 <body>
+<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
 <div class="app">
   <!-- SIDEBAR -->
   <aside class="sidebar">
@@ -745,6 +857,9 @@
   <main class="main" id="main-area">
     <!-- TOPBAR -->
     <div class="topbar" id="topbar">
+      <button class="tb-btn" id="mobile-menu-btn" onclick="openSidebar()" style="display:none" aria-label="Abrir configurações">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
       <div class="topbar-title">
         <strong id="doc-title">Sem documento</strong>
       </div>
@@ -794,6 +909,22 @@
         <div id="reader-content"></div>
       </div>
     </div>
+
+    <!-- MOBILE BOTTOM BAR -->
+    <nav class="mobile-bar" aria-label="Navegação rápida">
+      <button class="mobile-bar-btn" onclick="openSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        Ajustar
+      </button>
+      <button class="mobile-bar-btn primary-action" onclick="showWelcome()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Novo texto
+      </button>
+      <button class="mobile-bar-btn" onclick="applyPreset('dislexia')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 2a7 7 0 0 1 7 7c0 3.5-2.5 6-4 8H9c-1.5-2-4-4.5-4-8a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="17" x2="14" y2="17"/></svg>
+        Perfil
+      </button>
+    </nav>
 
     <!-- PROGRESS BAR -->
     <div class="reading-progress">
@@ -918,8 +1049,11 @@ function toggleFocus() {
   focusMode = !focusMode;
   document.getElementById('focus-toggle').classList.toggle('on', focusMode);
   document.getElementById('topbar').style.display = focusMode ? 'none' : '';
-  document.querySelector('.sidebar').style.transform = focusMode ? 'translateX(-100%)' : '';
-  document.querySelector('.welcome-screen').style.left = focusMode ? '0' : 'var(--sidebar-w)';
+  if (window.innerWidth > 640) {
+    document.querySelector('.sidebar').style.transform = focusMode ? 'translateX(-100%)' : '';
+  }
+  const ws = document.querySelector('.welcome-screen');
+  if (ws) ws.style.left = (focusMode || window.innerWidth <= 640) ? '0' : 'var(--sidebar-w)';
 }
 
 function toggleHighlight() {
@@ -997,6 +1131,7 @@ function startReading() {
 
   document.getElementById('welcome').classList.add('hidden');
   document.getElementById('reading-wrap').scrollTop = 0;
+  if (window.innerWidth <= 640) closeSidebar();
   updateProgress();
 }
 
@@ -1030,6 +1165,24 @@ dz.addEventListener('drop', e => {
 document.getElementById('paste-input').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.ctrlKey) startReading();
 });
+
+function openSidebar() {
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('sidebar-backdrop').classList.add('open');
+}
+
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-backdrop').classList.remove('open');
+}
+
+function checkMobile() {
+  const isMobile = window.innerWidth <= 640;
+  document.getElementById('mobile-menu-btn').style.display = isMobile ? '' : 'none';
+  if (!isMobile) closeSidebar();
+}
+window.addEventListener('resize', checkMobile);
+checkMobile();
 
 loadSample('ciencia');
 </script>
