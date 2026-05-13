@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
   @font-face {
     font-family: 'OpenDyslexic';
@@ -705,6 +706,100 @@
     .welcome-card { padding: 20px 16px; }
     .font-grid { grid-template-columns: 1fr 1fr; }
   }
+
+  /* ── PDF LOADING STATE ── */
+  .pdf-progress {
+    display: none;
+    margin-top: 12px;
+    background: var(--accent-light);
+    border-radius: 12px;
+    padding: 14px 16px;
+    text-align: left;
+  }
+  .pdf-progress.visible { display: block; }
+  .pdf-progress-label {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .pdf-progress-label svg {
+    width: 16px; height: 16px;
+    animation: spin 1s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .pdf-bar-track {
+    height: 4px;
+    background: rgba(196,98,45,0.2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .pdf-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 99px;
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .pdf-page-info {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    margin-top: 5px;
+  }
+
+  .upload-tabs {
+    display: flex;
+    gap: 0;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .upload-tab {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 12.5px;
+    font-family: 'DM Sans', sans-serif;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-right: 1px solid var(--border-strong);
+  }
+  .upload-tab:last-child { border-right: none; }
+  .upload-tab svg { width: 14px; height: 14px; flex-shrink: 0; }
+  .upload-tab.active {
+    background: var(--accent);
+    color: #fff;
+  }
+  .upload-tab:not(.active):hover {
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+
+  .pdf-info-badge {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-light);
+    color: var(--green);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12.5px;
+    font-weight: 500;
+    margin-top: 10px;
+  }
+  .pdf-info-badge.visible { display: flex; }
+  .pdf-info-badge svg { width: 15px; height: 15px; fill: var(--green); flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -876,18 +971,59 @@
     <div class="welcome-screen" id="welcome">
       <div class="welcome-card">
         <div class="welcome-icon">
-          <svg viewBox="0 0 32 32"><path d="M4 8h24M4 14h16M4 20h20M4 26h12"/></svg>
+          <svg viewBox="0 0 32 32" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"><rect x="4" y="2" width="18" height="24" rx="3"/><path d="M10 10h8M10 15h6M10 20h4"/><path d="M20 2v6h6" stroke-linejoin="round"/></svg>
         </div>
         <h1>Bem-vindo ao Léa</h1>
-        <p>Cole qualquer texto abaixo ou faça upload de um arquivo .txt.<br>O leitor adaptará o conteúdo para facilitar a leitura.</p>
+        <p>Cole um texto, carregue um <strong>.txt</strong> ou importe um <strong>PDF</strong> diretamente — o leitor extrai e adapta o conteúdo automaticamente.</p>
 
-        <textarea class="paste-area" id="paste-input" placeholder="Cole aqui seu texto, artigo, PDF ou material de estudo..."></textarea>
+        <div class="upload-tabs">
+          <button class="upload-tab active" id="tab-paste" onclick="switchTab('paste')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Colar texto
+          </button>
+          <button class="upload-tab" id="tab-txt" onclick="switchTab('txt')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Arquivo .txt
+          </button>
+          <button class="upload-tab" id="tab-pdf" onclick="switchTab('pdf')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h1.5a1.5 1.5 0 010 3H9v-3zm0 3h2.5m2.5-3v3m0-3h1.5a1 1 0 010 2H14"/></svg>
+            PDF
+          </button>
+        </div>
 
-        <label class="drop-zone" for="file-input">
-          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span>Carregar arquivo .txt</span>
-        </label>
-        <input type="file" id="file-input" accept=".txt,.md" onchange="handleFile(this)">
+        <div id="panel-paste">
+          <textarea class="paste-area" id="paste-input" placeholder="Cole aqui seu texto, artigo ou material de estudo..."></textarea>
+        </div>
+
+        <div id="panel-txt" style="display:none">
+          <label class="drop-zone" for="file-input-txt" id="dz-txt">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Clique ou arraste um arquivo <strong>.txt</strong> / <strong>.md</strong></span>
+          </label>
+          <input type="file" id="file-input-txt" accept=".txt,.md" onchange="handleTxtFile(this)">
+        </div>
+
+        <div id="panel-pdf" style="display:none">
+          <label class="drop-zone" for="file-input-pdf" id="dz-pdf">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>Clique ou arraste um arquivo <strong>.pdf</strong></span>
+          </label>
+          <input type="file" id="file-input-pdf" accept=".pdf,application/pdf" onchange="handlePdfFile(this)">
+
+          <div class="pdf-progress" id="pdf-progress">
+            <div class="pdf-progress-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+              <span id="pdf-status">Lendo PDF…</span>
+            </div>
+            <div class="pdf-bar-track"><div class="pdf-bar-fill" id="pdf-bar"></div></div>
+            <div class="pdf-page-info" id="pdf-page-info"></div>
+          </div>
+
+          <div class="pdf-info-badge" id="pdf-done-badge">
+            <svg viewBox="0 0 15 15"><path d="M7.5 1a6.5 6.5 0 100 13A6.5 6.5 0 007.5 1zm3.03 4.47l-3.5 5a.5.5 0 01-.78.07l-1.75-1.75a.5.5 0 01.7-.7l1.34 1.34 3.13-4.47a.5.5 0 01.82.57z"/></svg>
+            <span id="pdf-done-text">PDF convertido com sucesso</span>
+          </div>
+        </div>
 
         <div class="welcome-actions">
           <button class="btn-pill" onclick="loadSample()">Ver texto de exemplo</button>
@@ -1105,16 +1241,6 @@ function loadSample(type) {
   document.getElementById('paste-input').value = SAMPLES[key] || SAMPLES.ciencia;
 }
 
-function handleFile(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('paste-input').value = e.target.result;
-  };
-  reader.readAsText(file, 'UTF-8');
-}
-
 function startReading() {
   const text = document.getElementById('paste-input').value.trim();
   if (!text) { loadSample('ciencia'); startReading(); return; }
@@ -1146,20 +1272,126 @@ function updateProgress() {
   document.getElementById('progress-bar').style.width = pct.toFixed(1) + '%';
 }
 
-// Drag & drop for the drop zone
-const dz = document.querySelector('.drop-zone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--accent)'; });
-dz.addEventListener('dragleave', () => { dz.style.borderColor = ''; });
-dz.addEventListener('drop', e => {
-  e.preventDefault();
-  dz.style.borderColor = '';
-  const file = e.dataTransfer.files[0];
-  if (file) {
-    const r = new FileReader();
-    r.onload = ev => { document.getElementById('paste-input').value = ev.target.result; };
-    r.readAsText(file, 'UTF-8');
+// ── TAB SWITCHER ──
+function switchTab(name) {
+  ['paste','txt','pdf'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t === name);
+    document.getElementById('panel-'+t).style.display = t === name ? '' : 'none';
+  });
+}
+
+// ── TXT HANDLER ──
+function handleTxtFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = e => {
+    document.getElementById('paste-input').value = e.target.result;
+    switchTab('paste');
+  };
+  r.readAsText(file, 'UTF-8');
+}
+
+// ── PDF HANDLER ──
+async function handlePdfFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  await extractPdf(file);
+}
+
+async function extractPdf(file) {
+  const progressEl  = document.getElementById('pdf-progress');
+  const barEl       = document.getElementById('pdf-bar');
+  const statusEl    = document.getElementById('pdf-status');
+  const pageInfoEl  = document.getElementById('pdf-page-info');
+  const badgeEl     = document.getElementById('pdf-done-badge');
+  const badgeText   = document.getElementById('pdf-done-text');
+
+  progressEl.classList.add('visible');
+  badgeEl.classList.remove('visible');
+  barEl.style.width = '0%';
+  statusEl.textContent = 'Carregando PDF…';
+  pageInfoEl.textContent = '';
+
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const total = pdf.numPages;
+    let fullText = '';
+
+    for (let i = 1; i <= total; i++) {
+      statusEl.textContent = `Extraindo texto…`;
+      pageInfoEl.textContent = `Página ${i} de ${total}`;
+      barEl.style.width = Math.round((i / total) * 100) + '%';
+
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+
+      // Group items by approximate Y position to preserve line breaks
+      const lines = {};
+      content.items.forEach(item => {
+        const y = Math.round(item.transform[5]);
+        if (!lines[y]) lines[y] = [];
+        lines[y].push(item.str);
+      });
+
+      const sortedYs = Object.keys(lines).map(Number).sort((a, b) => b - a);
+      const pageText = sortedYs.map(y => lines[y].join(' ')).join('\n');
+      fullText += pageText + '\n\n';
+    }
+
+    const cleaned = fullText
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    document.getElementById('paste-input').value = cleaned;
+
+    progressEl.classList.remove('visible');
+    badgeEl.classList.add('visible');
+    badgeText.textContent = `PDF convertido · ${total} página${total > 1 ? 's' : ''} · ${cleaned.split(/\s+/).length.toLocaleString('pt-BR')} palavras`;
+
+    // Auto-switch to paste tab so user can see the result
+    setTimeout(() => { switchTab('paste'); }, 1200);
+
+  } catch (err) {
+    statusEl.textContent = 'Erro ao ler o PDF. Tente outro arquivo.';
+    barEl.style.width = '0%';
+    pageInfoEl.textContent = err.message || '';
+    console.error(err);
+  }
+}
+
+// ── DRAG & DROP (all zones) ──
+function setupDropZone(dzId, handler) {
+  const dz = document.getElementById(dzId);
+  if (!dz) return;
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.style.borderColor = 'var(--accent)'; dz.style.background = 'var(--accent-light)'; });
+  dz.addEventListener('dragleave', () => { dz.style.borderColor = ''; dz.style.background = ''; });
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.style.borderColor = ''; dz.style.background = '';
+    const file = e.dataTransfer.files[0];
+    if (file) handler(file);
+  });
+}
+
+setupDropZone('dz-txt', file => {
+  const r = new FileReader();
+  r.onload = e => { document.getElementById('paste-input').value = e.target.result; switchTab('paste'); };
+  r.readAsText(file, 'UTF-8');
+});
+
+setupDropZone('dz-pdf', file => {
+  if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+    switchTab('pdf');
+    extractPdf(file);
   }
 });
+
+
 
 // Keyboard shortcut: Enter in textarea starts reading
 document.getElementById('paste-input').addEventListener('keydown', e => {
