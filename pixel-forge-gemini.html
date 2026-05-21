@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Forge | Cursos de Game Dev</title>
+    <style>
+        /* Variáveis de Cores para facilitar a manutenção */
+        :root {
+            --bg-color: #0d1117;
+            --text-color: #c9d1d9;
+            --primary: #ff5722; /* Laranja "Forge" */
+            --secondary: #2ea043; /* Verde para botões de compra */
+            --card-bg: #161b22;
+        }
+
+        /* Reset Básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Navegação */
+        header {
+            background-color: #010409;
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        /* Seção Hero (Destaque principal) */
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+            background: linear-gradient(rgba(13, 17, 23, 0.8), rgba(13, 17, 23, 1)), url('https://images.unsplash.com/photo-1552820728-8b83bb6b773f?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80') center/cover;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            color: white;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-btn {
+            background-color: var(--primary);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 87, 34, 0.4);
+        }
+
+        /* Seção de Cursos */
+        .cursos-section {
+            padding: 60px 5%;
+            text-align: center;
+        }
+
+        .cursos-section h2 {
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        /* Filtros */
+        .filtros {
+            margin-bottom: 40px;
+        }
+
+        .filtro-btn {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 20px;
+            margin: 0 5px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filtro-btn.active, .filtro-btn:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Grid de Cards */
+        .cursos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #30363d;
+            transition: transform 0.3s ease;
+            text-align: left;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+        }
+
+        .card-img {
+            height: 160px;
+            background-color: #21262d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-content h3 {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .card-content p {
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            color: #8b949e;
+        }
+
+        .preco-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #30363d;
+        }
+
+        .preco {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .comprar-btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        .comprar-btn:hover {
+            background-color: #238636;
+        }
+
+        /* Rodapé */
+        footer {
+            background-color: #010409;
+            text-align: center;
+            padding: 30px;
+            margin-top: 50px;
+            border-top: 1px solid #30363d;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo">Pixel <span>Forge</span></div>
+        <nav>
+            <ul>
+                <li><a href="#">Início</a></li>
+                <li><a href="#cursos">Cursos</a></li>
+                <li><a href="#">Sobre Nós</a></li>
+                <li><a href="#">Contato</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Forje seu Futuro nos Games</h1>
+        <p>Aprenda desenvolvimento de jogos com profissionais da indústria. Do zero ao seu primeiro lançamento nas lojas.</p>
+        <button class="cta-btn" onclick="document.getElementById('cursos').scrollIntoView({behavior: 'smooth'})">Ver Cursos</button>
+    </section>
+
+    <section id="cursos" class="cursos-section">
+        <h2>Nossa Forja de Conhecimento</h2>
+        
+        <div class="filtros" id="botoes-filtro">
+            <button class="filtro-btn active" onclick="filtrarCursos('todos', this)">Todos</button>
+            <button class="filtro-btn" onclick="filtrarCursos('2d', this)">Jogos 2D</button>
+            <button class="filtro-btn" onclick="filtrarCursos('3d', this)">Jogos 3D</button>
+            <button class="filtro-btn" onclick="filtrarCursos('arte', this)">Arte & Áudio</button>
+        </div>
+
+        <div class="cursos-grid" id="grid-cursos">
+            <!-- Os cards serão injetados aqui pelo JavaScript -->
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Pixel Forge. Todos os direitos reservados. Projeto Escolar.</p>
+    </footer>
+
+    <script>
+        // Banco de dados fictício dos cursos (Array de Objetos)
+        const cursos = [
+            {
+                id: 1,
+                titulo: "Godot 4: Criando seu primeiro RPG",
+                descricao: "Aprenda lógica de programação e crie um jogo 2D completo na engine mais promissora do mercado.",
+                categoria: "2d",
+                preco: "R$ 97,00",
+                icone: "👾"
+            },
+            {
+                id: 2,
+                titulo: "Unreal Engine 5: Masterclass 3D",
+                descricao: "Domine Blueprints, iluminação Lumen e crie cenários ultrarrealistas para jogos AAA.",
+                categoria: "3d",
+                preco: "R$ 197,00",
+                icone: "🌐"
+            },
+            {
+                id: 3,
+                titulo: "Pixel Art para Iniciantes",
+                descricao: "Fundamentos de cor, luz, sombra e animação frame a frame usando Aseprite.",
+                categoria: "arte",
+                preco: "R$ 67,00",
+                icone: "🎨"
+            },
+            {
+                id: 4,
+                titulo: "Unity C# Sobrevivência 3D",
+                descricao: "Crie um jogo de sobrevivência completo focado em inventário, IA inimiga e crafting.",
+                categoria: "3d",
+                preco: "R$ 147,00",
+                icone: "🧟"
+            },
+            {
+                id: 5,
+                titulo: "Design de Som e Trilha Sonora",
+                descricao: "Composição e efeitos sonoros (SFX) impactantes para dar vida aos seus projetos.",
+                categoria: "arte",
+                preco: "R$ 87,00",
+                icone: "🎧"
+            },
+            {
+                id: 6,
+                titulo: "Plataforma 2D Avançado",
+                descricao: "Física, controles responsivos e level design focados em jogos estilo Metroidvania.",
+                categoria: "2d",
+                preco: "R$ 117,00",
+                icone: "🏃"
+            }
+        ];
+
+        const gridCursos = document.getElementById('grid-cursos');
+
+        // Função para renderizar os cards na tela
+        function renderizarCursos(listaCursos) {
+            gridCursos.innerHTML = ""; // Limpa o grid atual
+            
+            if(listaCursos.length === 0) {
+                gridCursos.innerHTML = "<p>Nenhum curso encontrado nesta categoria.</p>";
+                return;
+            }
+
+            listaCursos.forEach(curso => {
+                const cardHTML = `
+                    <div class="card">
+                        <div class="card-img">${curso.icone}</div>
+                        <div class="card-content">
+                            <h3>${curso.titulo}</h3>
+                            <p>${curso.descricao}</p>
+                            <div class="preco-area">
+                                <span class="preco">${curso.preco}</span>
+                                <button class="comprar-btn" onclick="alert('Adicionado ao carrinho: ${curso.titulo}')">Matricular</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                gridCursos.innerHTML += cardHTML;
+            });
+        }
+
+        // Função para filtrar os cursos pelas categorias
+        function filtrarCursos(categoria, botaoClicado) {
+            // Atualiza o estado visual dos botões
+            const botoes = document.querySelectorAll('.filtro-btn');
+            botoes.forEach(btn => btn.classList.remove('active'));
+            botaoClicado.classList.add('active');
+
+            // Filtra o array de cursos
+            if (categoria === 'todos') {
+                renderizarCursos(cursos);
+            } else {
+                const cursosFiltrados = cursos.filter(curso => curso.categoria === categoria);
+                renderizarCursos(cursosFiltrados);
+            }
+        }
+
+        // Renderiza todos os cursos ao carregar a página pela primeira vez
+        renderizarCursos(cursos);
+    </script>
+</body>
+</html>

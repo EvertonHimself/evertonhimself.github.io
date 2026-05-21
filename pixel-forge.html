@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Forge — Forje seu Jogo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Bungee+Inline&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a28;
+    --accent: #ff3e3e;
+    --accent2: #ffe600;
+    --accent3: #00e5ff;
+    --text: #f0f0f0;
+    --muted: #888;
+    --border: #2a2a3a;
+    --pixel: 4px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── CUSTOM CURSOR ── */
+  #cursor {
+    position: fixed; top: 0; left: 0;
+    width: 16px; height: 16px;
+    background: var(--accent2);
+    image-rendering: pixelated;
+    clip-path: polygon(0 0, 60% 0, 60% 40%, 100% 40%, 100% 100%, 40% 100%, 40% 60%, 0 60%);
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform .1s;
+    mix-blend-mode: difference;
+  }
+  #cursor.big { transform: scale(3); }
+
+  /* ── SCANLINES ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      0deg, transparent, transparent 2px,
+      rgba(0,0,0,.18) 2px, rgba(0,0,0,.18) 4px
+    );
+    pointer-events: none;
+    z-index: 9000;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 8999;
+    opacity: .4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 2.5rem;
+    background: rgba(10,10,15,.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 2px solid var(--border);
+  }
+  .logo {
+    font-family: 'Bungee', sans-serif;
+    font-size: 1.5rem;
+    color: var(--accent2);
+    letter-spacing: .04em;
+    text-shadow: 3px 3px 0 var(--accent);
+  }
+  .logo span { color: var(--accent); }
+  nav ul { list-style: none; display: flex; gap: 2rem; }
+  nav ul a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: .75rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    transition: color .2s;
+  }
+  nav ul a:hover { color: var(--accent2); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: #fff;
+    padding: .5rem 1.2rem;
+    font-family: 'Bungee', sans-serif;
+    font-size: .85rem;
+    letter-spacing: .06em;
+    border: none;
+    clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
+    cursor: none;
+    transition: background .2s;
+  }
+  .nav-cta:hover { background: var(--accent2); color: var(--bg); }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding-top: 80px;
+  }
+
+  /* pixel grid bg */
+  .pixel-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: .4;
+    animation: gridShift 20s linear infinite;
+  }
+  @keyframes gridShift {
+    from { background-position: 0 0; }
+    to   { background-position: 40px 40px; }
+  }
+
+  /* floating pixels */
+  .pixel-float {
+    position: absolute;
+    animation: floatUp linear infinite;
+    opacity: 0;
+    image-rendering: pixelated;
+  }
+  @keyframes floatUp {
+    0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: .6; }
+    100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+  }
+
+  .hero-inner {
+    position: relative; z-index: 2;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .hero-tag {
+    display: inline-block;
+    background: var(--accent3);
+    color: var(--bg);
+    font-size: .65rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    padding: .3rem .8rem;
+    margin-bottom: 1.5rem;
+    clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+    animation: fadeDown .6s ease both;
+  }
+
+  .hero-title {
+    font-family: 'Bungee Inline', sans-serif;
+    font-size: clamp(3rem, 10vw, 7.5rem);
+    line-height: .95;
+    margin-bottom: 1rem;
+    animation: fadeDown .7s .1s ease both;
+  }
+  .hero-title .line1 { color: var(--text); display: block; }
+  .hero-title .line2 {
+    color: var(--accent2);
+    display: block;
+    text-shadow: 4px 4px 0 var(--accent);
+    position: relative;
+  }
+
+  .hero-sub {
+    font-size: .9rem;
+    color: var(--muted);
+    max-width: 520px;
+    margin: 0 auto 2.5rem;
+    line-height: 1.8;
+    animation: fadeDown .7s .2s ease both;
+  }
+
+  .hero-btns {
+    display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+    animation: fadeDown .7s .3s ease both;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    padding: .9rem 2.2rem;
+    font-family: 'Bungee', sans-serif;
+    font-size: 1rem;
+    letter-spacing: .06em;
+    border: none;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    cursor: none;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--accent2);
+    transform: translateX(-110%);
+    transition: transform .3s;
+  }
+  .btn-primary:hover::after { transform: translateX(0); }
+  .btn-primary:hover { color: var(--bg); }
+  .btn-primary span { position: relative; z-index: 1; }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    padding: .9rem 2.2rem;
+    font-family: 'Bungee', sans-serif;
+    font-size: 1rem;
+    border: 2px solid var(--border);
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    cursor: none;
+    transition: all .2s;
+  }
+  .btn-outline:hover { border-color: var(--accent3); color: var(--accent3); }
+
+  /* pixel hero deco */
+  .hero-sprite {
+    position: absolute;
+    right: 8%; bottom: 10%;
+    width: 160px; height: 160px;
+    image-rendering: pixelated;
+    animation: float 3s ease-in-out infinite;
+    opacity: .6;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-16px); }
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    background: var(--surface);
+    border-top: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    padding: 1.5rem 2.5rem;
+    display: flex; justify-content: center; gap: 4rem; flex-wrap: wrap;
+  }
+  .stat {
+    text-align: center;
+    position: relative;
+  }
+  .stat::after {
+    content: '';
+    position: absolute; right: -2rem; top: 50%;
+    transform: translateY(-50%);
+    width: 4px; height: 4px;
+    background: var(--accent);
+  }
+  .stat:last-child::after { display: none; }
+  .stat-num {
+    font-family: 'Bungee', sans-serif;
+    font-size: 2rem;
+    color: var(--accent2);
+    display: block;
+  }
+  .stat-label { font-size: .65rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+  /* ── SECTIONS COMMON ── */
+  section { padding: 6rem 2.5rem; }
+  .section-tag {
+    font-size: .65rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: .75rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .section-tag::before {
+    content: '';
+    display: inline-block;
+    width: 20px; height: 3px;
+    background: var(--accent3);
+  }
+  .section-title {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.1;
+    margin-bottom: 1rem;
+  }
+  .section-sub { color: var(--muted); font-size: .85rem; line-height: 1.8; max-width: 500px; }
+
+  /* ── COURSES ── */
+  #cursos { background: var(--bg); }
+
+  .courses-header { text-align: center; margin-bottom: 4rem; }
+  .courses-header .section-tag { justify-content: center; }
+  .courses-header .section-sub { margin: 0 auto; }
+
+  .courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .course-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));
+    padding: 0;
+    overflow: hidden;
+    transition: border-color .3s, transform .3s;
+    position: relative;
+    cursor: none;
+  }
+  .course-card:hover { border-color: var(--accent); transform: translateY(-6px); }
+  .course-card:nth-child(2) { border-color: var(--accent3); }
+  .course-card:nth-child(2):hover { border-color: var(--accent2); }
+
+  .card-banner {
+    height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 3.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card-banner::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: inherit;
+    filter: blur(20px) brightness(.5);
+  }
+  .card-banner span { position: relative; z-index: 1; }
+
+  .c1 .card-banner { background: linear-gradient(135deg, #1a1a28, #2d1a3a); }
+  .c2 .card-banner { background: linear-gradient(135deg, #0d2233, #1a3344); }
+  .c3 .card-banner { background: linear-gradient(135deg, #1a2810, #2a3d18); }
+  .c4 .card-banner { background: linear-gradient(135deg, #2d1a10, #3d2218); }
+  .c5 .card-banner { background: linear-gradient(135deg, #101a2d, #182240); }
+  .c6 .card-banner { background: linear-gradient(135deg, #2a1020, #3d1830); }
+
+  .card-body { padding: 1.5rem; }
+  .card-level {
+    font-size: .6rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    padding: .2rem .6rem;
+    border-radius: 0;
+    margin-bottom: .75rem;
+    display: inline-block;
+  }
+  .lvl-init { background: rgba(0,229,255,.15); color: var(--accent3); border: 1px solid var(--accent3); }
+  .lvl-mid  { background: rgba(255,230,0,.12); color: var(--accent2); border: 1px solid var(--accent2); }
+  .lvl-adv  { background: rgba(255,62,62,.12); color: var(--accent); border: 1px solid var(--accent); }
+
+  .card-title {
+    font-family: 'Bungee', sans-serif;
+    font-size: 1.1rem;
+    margin-bottom: .5rem;
+    line-height: 1.2;
+  }
+  .card-desc { font-size: .75rem; color: var(--muted); line-height: 1.7; margin-bottom: 1.2rem; }
+  .card-meta { display: flex; align-items: center; justify-content: space-between; }
+  .card-price {
+    font-family: 'Bungee', sans-serif;
+    font-size: 1.3rem;
+    color: var(--accent2);
+  }
+  .card-price small { font-family: 'Space Mono', monospace; font-size: .6rem; color: var(--muted); display: block; margin-top: -.2rem; }
+  .card-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    font-family: 'Bungee', sans-serif;
+    font-size: .75rem;
+    padding: .5rem 1rem;
+    clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px));
+    cursor: none;
+    transition: background .2s;
+  }
+  .card-btn:hover { background: var(--accent2); color: var(--bg); }
+
+  /* ── HOW IT WORKS ── */
+  #como { background: var(--surface); }
+  .how-inner { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: center; }
+
+  .steps { margin-top: 2rem; display: flex; flex-direction: column; gap: 2rem; }
+  .step { display: flex; gap: 1.2rem; }
+  .step-num {
+    font-family: 'Bungee Inline', sans-serif;
+    font-size: 3rem;
+    color: var(--border);
+    min-width: 60px;
+    line-height: 1;
+    transition: color .3s;
+  }
+  .step:hover .step-num { color: var(--accent2); }
+  .step-title { font-family: 'Bungee', sans-serif; font-size: 1rem; margin-bottom: .3rem; }
+  .step-text { font-size: .75rem; color: var(--muted); line-height: 1.7; }
+
+  /* pixel art terminal */
+  .terminal {
+    background: #080810;
+    border: 2px solid var(--border);
+    clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
+    padding: 0;
+    overflow: hidden;
+  }
+  .term-bar {
+    background: var(--card);
+    padding: .6rem 1rem;
+    display: flex; align-items: center; gap: .5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .term-dot { width: 10px; height: 10px; border-radius: 0; }
+  .td1 { background: var(--accent); }
+  .td2 { background: var(--accent2); }
+  .td3 { background: #3a3a4a; }
+  .term-title { font-size: .65rem; color: var(--muted); letter-spacing: .1em; margin-left: auto; }
+  .term-body { padding: 1.5rem; font-size: .75rem; line-height: 1.9; }
+  .t-prompt { color: var(--accent3); }
+  .t-cmd    { color: var(--text); }
+  .t-out    { color: var(--muted); }
+  .t-ok     { color: #7fff7f; }
+  .t-cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent2); animation: blink .8s step-end infinite; vertical-align: middle; }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* ── TESTIMONIALS ── */
+  #depoimentos { background: var(--bg); }
+  .testi-header { text-align: center; margin-bottom: 4rem; }
+  .testi-header .section-tag { justify-content: center; }
+  .testi-grid { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+
+  .testi-card {
+    background: var(--card);
+    border: 2px solid var(--border);
+    padding: 2rem;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    transition: border-color .3s;
+    position: relative;
+  }
+  .testi-card:hover { border-color: var(--accent3); }
+  .testi-quote {
+    font-family: 'Bungee Inline', sans-serif;
+    font-size: 4rem;
+    color: var(--accent);
+    line-height: .6;
+    margin-bottom: 1rem;
+    display: block;
+  }
+  .testi-text { font-size: .8rem; color: var(--muted); line-height: 1.8; margin-bottom: 1.5rem; font-style: italic; }
+  .testi-author { display: flex; align-items: center; gap: .8rem; }
+  .testi-avatar {
+    width: 40px; height: 40px;
+    display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr);
+    image-rendering: pixelated;
+    flex-shrink: 0;
+  }
+  .testi-name { font-family: 'Bungee', sans-serif; font-size: .8rem; }
+  .testi-role { font-size: .65rem; color: var(--muted); }
+  .stars { color: var(--accent2); font-size: .85rem; margin-bottom: .8rem; letter-spacing: .08em; }
+
+  /* ── CTA BANNER ── */
+  #cta-section {
+    background: var(--accent);
+    padding: 5rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  #cta-section::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,0,0,.15) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,.15) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+  .cta-inner { position: relative; z-index: 1; }
+  .cta-title {
+    font-family: 'Bungee Inline', sans-serif;
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    color: #fff;
+    line-height: 1;
+    text-shadow: 4px 4px 0 rgba(0,0,0,.25);
+    margin-bottom: .75rem;
+  }
+  .cta-sub { color: rgba(255,255,255,.8); font-size: .85rem; margin-bottom: 2rem; }
+  .btn-dark {
+    background: var(--bg);
+    color: var(--accent2);
+    padding: 1rem 2.5rem;
+    font-family: 'Bungee', sans-serif;
+    font-size: 1.1rem;
+    border: none;
+    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    cursor: none;
+    transition: all .2s;
+    display: inline-block;
+  }
+  .btn-dark:hover { background: var(--accent2); color: var(--bg); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--surface);
+    border-top: 2px solid var(--border);
+    padding: 3rem 2.5rem 2rem;
+  }
+  .footer-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .footer-brand .logo { font-size: 1.3rem; }
+  .footer-brand p { font-size: .7rem; color: var(--muted); margin-top: .5rem; line-height: 1.6; max-width: 220px; }
+  .footer-col h4 { font-family: 'Bungee', sans-serif; font-size: .85rem; color: var(--accent2); margin-bottom: 1rem; }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+  .footer-col ul a { font-size: .7rem; color: var(--muted); text-decoration: none; transition: color .2s; }
+  .footer-col ul a:hover { color: var(--accent3); }
+  .footer-bottom { text-align: center; font-size: .65rem; color: var(--muted); letter-spacing: .08em; }
+  .footer-bottom span { color: var(--accent); }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(40px); transition: opacity .7s, transform .7s; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-l { opacity: 0; transform: translateX(-40px); transition: opacity .7s, transform .7s; }
+  .reveal-l.visible { opacity: 1; transform: translateX(0); }
+  .reveal-r { opacity: 0; transform: translateX(40px); transition: opacity .7s, transform .7s; }
+  .reveal-r.visible { opacity: 1; transform: translateX(0); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    nav ul { display: none; }
+    .how-inner { grid-template-columns: 1fr; gap: 3rem; }
+    .stats-bar { gap: 2rem; }
+    .stat::after { display: none; }
+    .hero-sprite { opacity: .2; }
+  }
+</style>
+</head>
+<body>
+
+<div id="cursor"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">PIXEL<span>FORGE</span></div>
+  <ul>
+    <li><a href="#cursos">Cursos</a></li>
+    <li><a href="#como">Como Funciona</a></li>
+    <li><a href="#depoimentos">Depoimentos</a></li>
+  </ul>
+  <button class="nav-cta" onclick="document.getElementById('cursos').scrollIntoView({behavior:'smooth'})">Ver Cursos</button>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="pixel-grid"></div>
+  <div class="hero-inner">
+    <div class="hero-tag">🕹️ Aprenda · Crie · Publique</div>
+    <h1 class="hero-title">
+      <span class="line1">FORJE SEU</span>
+      <span class="line2">PRÓXIMO JOGO</span>
+    </h1>
+    <p class="hero-sub">
+      Cursos práticos de desenvolvimento de games para quem quer sair do zero e lançar jogos reais. Unity, Godot, Pygame e muito mais.
+    </p>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="document.getElementById('cursos').scrollIntoView({behavior:'smooth'})">
+        <span>🎮 Começar Agora</span>
+      </button>
+      <button class="btn-outline" onclick="document.getElementById('como').scrollIntoView({behavior:'smooth'})">Ver Como Funciona</button>
+    </div>
+  </div>
+
+  <!-- pixel hero sprite (SVG art) -->
+  <svg class="hero-sprite" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <rect x="6" y="0" width="4" height="2" fill="#ffe600"/>
+    <rect x="4" y="2" width="8" height="2" fill="#ffe600"/>
+    <rect x="4" y="4" width="2" height="2" fill="#fff"/>
+    <rect x="8" y="4" width="2" height="2" fill="#fff"/>
+    <rect x="4" y="4" width="8" height="4" fill="#ffe600"/>
+    <rect x="2" y="6" width="12" height="4" fill="#ffe600"/>
+    <rect x="4" y="10" width="8" height="2" fill="#ffe600"/>
+    <rect x="2" y="12" width="4" height="2" fill="#ff3e3e"/>
+    <rect x="10" y="12" width="4" height="2" fill="#ff3e3e"/>
+    <rect x="2" y="14" width="2" height="2" fill="#ff3e3e"/>
+    <rect x="12" y="14" width="2" height="2" fill="#ff3e3e"/>
+    <rect x="5" y="6" width="2" height="2" fill="#0a0a0f"/>
+    <rect x="9" y="6" width="2" height="2" fill="#0a0a0f"/>
+    <rect x="6" y="8" width="4" height="1" fill="#ff3e3e"/>
+  </svg>
+</section>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat">
+    <span class="stat-num" data-target="12400">0</span>
+    <span class="stat-label">Alunos Formados</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num" data-target="38">0</span>
+    <span class="stat-label">Cursos Ativos</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num" data-target="97">0</span>
+    <span class="stat-label">% Satisfação</span>
+  </div>
+  <div class="stat">
+    <span class="stat-num" data-target="340">0</span>
+    <span class="stat-label">Jogos Publicados</span>
+  </div>
+</div>
+
+<!-- COURSES -->
+<section id="cursos">
+  <div class="courses-header reveal">
+    <div class="section-tag">Trilhas de Aprendizado</div>
+    <h2 class="section-title">Escolha Seu Caminho</h2>
+    <p class="section-sub">Do zero ao lançamento. Cada curso é um nível diferente — você decide por onde começar.</p>
+  </div>
+
+  <div class="courses-grid">
+    <div class="course-card c1 reveal">
+      <div class="card-banner"><span>⚔️</span></div>
+      <div class="card-body">
+        <span class="card-level lvl-init">Iniciante</span>
+        <h3 class="card-title">Criando RPGs com Unity</h3>
+        <p class="card-desc">Aprenda C#, física, colisões e construa um RPG 2D completo do zero com sistema de combate e inventário.</p>
+        <div class="card-meta">
+          <div class="card-price">R$197<small>acesso vitalício</small></div>
+          <button class="card-btn">Ver Curso →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="course-card c2 reveal">
+      <div class="card-banner"><span>🚀</span></div>
+      <div class="card-body">
+        <span class="card-level lvl-mid">Intermediário</span>
+        <h3 class="card-title">Godot 4: Plataforma e Física</h3>
+        <p class="card-desc">GDScript avançado, tilemap, inimigos com IA, animações e exportação para PC e mobile com Godot Engine.</p>
+        <div class="card-meta">
+          <div class="card-price">R$247<small>acesso vitalício</small></div>
+          <button class="card-btn">Ver Curso →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="course-card c3 reveal">
+      <div class="card-banner"><span>🐍</span></div>
+      <div class="card-body">
+        <span class="card-level lvl-init">Iniciante</span>
+        <h3 class="card-title">Pygame do Zero ao Jogo</h3>
+        <p class="card-desc">Python para games: sprites, colisões, sons e publicação. Ideal para quem quer aprender programação criando algo divertido.</p>
+        <div class="card-meta">
+          <div class="card-price">R$147<small>acesso vitalício</small></div>
+          <button class="card-btn">Ver Curso →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="course-card c4 reveal">
+      <div class="card-banner"><span>🔥</span></div>
+      <div class="card-body">
+        <span class="card-level lvl-adv">Avançado</span>
+        <h3 class="card-title">Shaders e Gráficos 3D</h3>
+        <p class="card-desc">GLSL, HLSL e shaders customizados em Unity/Godot. Iluminação, efeitos pós-processamento e renderização avançada.</p>
+        <div class="card-meta">
+          <div class="card-price">R$397<small>acesso vitalício</small></div>
+          <button class="card-btn">Ver Curso →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="course-card c5 reveal">
+      <div class="card-banner"><span>🌐</span></div>
+      <div class="card-body">
+        <span class="card-level lvl-mid">Intermediário</span>
+        <h3 class="card-title">Jogos Multiplayer Online</h3>
+        <p class="card-desc">Netcode, sincronização de estado, lag compensation e servidores dedicados com Unity Netcode e Mirror.</p>
+        <div class="card-meta">
+          <div class="card-price">R$297<small>acesso vitalício</small></div>
+          <button class="card-btn">Ver Curso →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="course-card c6 reveal">
+      <div class="card-banner"><span>🎨</span></div>
+      <div class="card-body">
+        <span class="card-level lvl-init">Iniciante</span>
+        <h3 class="card-title">Pixel Art para Games</h3>
+        <p class="card-desc">Fundamentos de pixel art, animação de sprites, tilemaps e criação de assets completos para seu jogo indie.</p>
+        <div class="card-meta">
+          <div class="card-price">R$127<small>acesso vitalício</small></div>
+          <button class="card-btn">Ver Curso →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="como">
+  <div class="how-inner">
+    <div class="reveal-l">
+      <div class="section-tag">Metodologia</div>
+      <h2 class="section-title">Como Funciona</h2>
+      <p class="section-sub">Aprender game dev é difícil sem o caminho certo. A Pixel Forge estrutura tudo em missões claras.</p>
+      <div class="steps">
+        <div class="step">
+          <span class="step-num">01</span>
+          <div>
+            <div class="step-title">Escolha sua Engine</div>
+            <p class="step-text">Unity, Godot ou Pygame — te ajudamos a encontrar a ferramenta certa para seu objetivo e nível atual.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">02</span>
+          <div>
+            <div class="step-title">Aprenda Fazendo</div>
+            <p class="step-text">Cada aula termina com um mini-projeto funcional. Nada de teoria sem prática — você cria desde a primeira aula.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="step-num">03</span>
+          <div>
+            <div class="step-title">Publique seu Jogo</div>
+            <p class="step-text">O curso termina quando seu jogo está publicado no itch.io. Portfólio real, não só certificado.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reveal-r">
+      <div class="terminal">
+        <div class="term-bar">
+          <div class="term-dot td1"></div>
+          <div class="term-dot td2"></div>
+          <div class="term-dot td3"></div>
+          <span class="term-title">pixel-forge ~ progresso</span>
+        </div>
+        <div class="term-body">
+          <div><span class="t-prompt">$ </span><span class="t-cmd">pforge status</span></div>
+          <div class="t-out">Carregando progresso...</div>
+          <br>
+          <div><span class="t-ok">✔</span> Módulo 1: Fundamentos    <span class="t-ok">100%</span></div>
+          <div><span class="t-ok">✔</span> Módulo 2: Física & Colisão <span class="t-ok">100%</span></div>
+          <div><span class="t-ok">✔</span> Módulo 3: Animações       <span class="t-ok">100%</span></div>
+          <div style="color:var(--accent2)">▶ Módulo 4: IA de Inimigos  <span style="color:var(--accent2)">67%</span></div>
+          <div class="t-out">  Módulo 5: UI e HUD       <span class="t-muted">0%</span></div>
+          <div class="t-out">  Módulo 6: Publicação     <span class="t-muted">0%</span></div>
+          <br>
+          <div><span class="t-prompt">$ </span><span class="t-cmd">pforge next-lesson</span></div>
+          <div class="t-out">Abrindo: "Pathfinding com A*"</div>
+          <div><span class="t-prompt">$ </span><span class="t-cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section id="depoimentos">
+  <div class="testi-header reveal">
+    <div class="section-tag">Depoimentos</div>
+    <h2 class="section-title">Quem Já Forjou Seus Jogos</h2>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card reveal">
+      <span class="testi-quote">"</span>
+      <div class="stars">★★★★★</div>
+      <p class="testi-text">Em 3 meses publiquei meu primeiro jogo no itch.io e já tem mais de 500 downloads. A metodologia da Pixel Forge é incrível — você aprende fazendo, não só assistindo.</p>
+      <div class="testi-author">
+        <svg class="testi-avatar" viewBox="0 0 5 5" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="0" width="3" height="2" fill="#ff3e3e"/>
+          <rect x="0" y="2" width="5" height="3" fill="#ffe600"/>
+          <rect x="1" y="2" width="1" height="1" fill="#0a0a0f"/>
+          <rect x="3" y="2" width="1" height="1" fill="#0a0a0f"/>
+          <rect x="1" y="4" width="3" height="1" fill="#ff3e3e"/>
+        </svg>
+        <div>
+          <div class="testi-name">Lucas Ferreira</div>
+          <div class="testi-role">Indie Dev — São Paulo</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testi-card reveal">
+      <span class="testi-quote">"</span>
+      <div class="stars">★★★★★</div>
+      <p class="testi-text">Tentei aprender Unity por conta própria por um ano e travei. Com o curso de RPG da Pixel Forge aprendi em 8 semanas o que não consegui em 12 meses sozinha.</p>
+      <div class="testi-author">
+        <svg class="testi-avatar" viewBox="0 0 5 5" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="0" width="3" height="2" fill="#00e5ff"/>
+          <rect x="0" y="2" width="5" height="3" fill="#7f5fff"/>
+          <rect x="1" y="2" width="1" height="1" fill="#0a0a0f"/>
+          <rect x="3" y="2" width="1" height="1" fill="#0a0a0f"/>
+          <rect x="2" y="3" width="1" height="1" fill="#ff3e3e"/>
+        </svg>
+        <div>
+          <div class="testi-name">Ana Paula Costa</div>
+          <div class="testi-role">Estudante — Belo Horizonte</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testi-card reveal">
+      <span class="testi-quote">"</span>
+      <div class="stars">★★★★★</div>
+      <p class="testi-text">Fiz o curso de Pygame porque já sabia Python, mas não sabia nada de games. Resultado: publiquei um jogo de nave que virou meu projeto de TCC. Professor da faculdade amou!</p>
+      <div class="testi-author">
+        <svg class="testi-avatar" viewBox="0 0 5 5" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="0" width="3" height="2" fill="#7fff7f"/>
+          <rect x="0" y="2" width="5" height="3" fill="#3a6a3a"/>
+          <rect x="1" y="2" width="1" height="1" fill="#0a0a0f"/>
+          <rect x="3" y="2" width="1" height="1" fill="#0a0a0f"/>
+          <rect x="1" y="4" width="1" height="1" fill="#ffe600"/>
+          <rect x="3" y="4" width="1" height="1" fill="#ffe600"/>
+        </svg>
+        <div>
+          <div class="testi-name">Rodrigo Alves</div>
+          <div class="testi-role">Dev & Universitário — Recife</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section id="cta-section">
+  <div class="cta-inner reveal">
+    <div class="cta-title">PRONTO PARA<br>FORJAR SEU JOGO?</div>
+    <p class="cta-sub">Junte-se a mais de 12.000 game devs que já saíram do zero e publicaram seus jogos.</p>
+    <button class="btn-dark" onclick="document.getElementById('cursos').scrollIntoView({behavior:'smooth'})">
+      🔥 Ver Todos os Cursos
+    </button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo">PIXEL<span>FORGE</span></div>
+      <p>Forjando game devs desde 2019. Do zero ao lançamento, um pixel de cada vez.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Cursos</h4>
+      <ul>
+        <li><a href="#">Unity & C#</a></li>
+        <li><a href="#">Godot Engine</a></li>
+        <li><a href="#">Pygame</a></li>
+        <li><a href="#">Pixel Art</a></li>
+        <li><a href="#">Shaders</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Empresa</h4>
+      <ul>
+        <li><a href="#">Sobre Nós</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Comunidade</a></li>
+        <li><a href="#">Afiliados</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Suporte</h4>
+      <ul>
+        <li><a href="#">FAQ</a></li>
+        <li><a href="#">Contato</a></li>
+        <li><a href="#">Política de Privacidade</a></li>
+        <li><a href="#">Termos de Uso</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    © 2025 Pixel Forge. Feito com <span>♥</span> e muito café. Projeto escolar fictício.
+  </div>
+</footer>
+
+<script>
+  // ── CURSOR ──
+  const cursor = document.getElementById('cursor');
+  document.addEventListener('mousemove', e => {
+    cursor.style.left = (e.clientX - 8) + 'px';
+    cursor.style.top  = (e.clientY - 8) + 'px';
+  });
+  document.querySelectorAll('button, a, .course-card').forEach(el => {
+    el.addEventListener('mouseenter', () => cursor.classList.add('big'));
+    el.addEventListener('mouseleave', () => cursor.classList.remove('big'));
+  });
+
+  // ── FLOATING PIXELS ──
+  const colors = ['#ff3e3e','#ffe600','#00e5ff','#7f5fff','#7fff7f'];
+  const hero = document.getElementById('hero');
+  for (let i = 0; i < 24; i++) {
+    const px = document.createElement('div');
+    const size = Math.random() * 10 + 4;
+    px.className = 'pixel-float';
+    px.style.cssText = `
+      width: ${size}px; height: ${size}px;
+      background: ${colors[Math.floor(Math.random()*colors.length)]};
+      left: ${Math.random()*100}%;
+      animation-duration: ${Math.random()*12+8}s;
+      animation-delay: ${Math.random()*8}s;
+    `;
+    hero.appendChild(px);
+  }
+
+  // ── SCROLL REVEAL ──
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.reveal, .reveal-l, .reveal-r').forEach(el => obs.observe(el));
+
+  // ── COUNTER ANIMATION ──
+  const countObs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      const target = +el.dataset.target;
+      const suffix = target === 97 ? '%' : target > 999 ? '+' : '';
+      let current = 0;
+      const step = target / 60;
+      const timer = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.textContent = Math.floor(current).toLocaleString('pt-BR') + suffix;
+        if (current >= target) clearInterval(timer);
+      }, 24);
+      countObs.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.stat-num[data-target]').forEach(el => countObs.observe(el));
+
+  // ── STAGGER CARDS ──
+  document.querySelectorAll('.course-card.reveal').forEach((card, i) => {
+    card.style.transitionDelay = (i * 0.1) + 's';
+  });
+  document.querySelectorAll('.testi-card.reveal').forEach((card, i) => {
+    card.style.transitionDelay = (i * 0.12) + 's';
+  });
+</script>
+</body>
+</html>
