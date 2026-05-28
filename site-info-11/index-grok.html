@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Level Up Academy - Cursos de Desenvolvimento de Games</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #00ff9d;
+      --dark: #0a0a0a;
+      --gray: #1a1a1a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--dark);
+      color: #fff;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(10px);
+      position: fixed;
+      width: 100%;
+      z-index: 1000;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    nav {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+
+    .btn-login {
+      padding: 10px 24px;
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-login:hover {
+      background: var(--primary);
+      color: #000;
+    }
+
+    /* Hero */
+    .hero {
+      height: 100vh;
+      background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1920') center/cover no-repeat;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-content {
+      max-width: 900px;
+      padding: 0 20px;
+      z-index: 2;
+    }
+
+    .hero h1 {
+      font-size: 4.5rem;
+      margin-bottom: 1rem;
+      background: linear-gradient(90deg, #00ff9d, #00b36b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.4rem;
+      margin-bottom: 2rem;
+      opacity: 0.9;
+    }
+
+    .cta-button {
+      padding: 18px 48px;
+      font-size: 1.3rem;
+      background: var(--primary);
+      color: #000;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.4s;
+      box-shadow: 0 10px 30px rgba(0, 255, 157, 0.3);
+    }
+
+    .cta-button:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0, 255, 157, 0.4);
+    }
+
+    /* Seções */
+    section {
+      padding: 100px 0;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    h2 {
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: 4rem;
+      color: var(--primary);
+    }
+
+    /* Cursos */
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+
+    .course-card {
+      background: var(--gray);
+      border-radius: 20px;
+      overflow: hidden;
+      transition: all 0.4s;
+      border: 1px solid #333;
+    }
+
+    .course-card:hover {
+      transform: translateY(-15px);
+      border-color: var(--primary);
+      box-shadow: 0 20px 40px rgba(0, 255, 157, 0.2);
+    }
+
+    .course-card img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .course-info {
+      padding: 1.5rem;
+    }
+
+    .course-info h3 {
+      margin-bottom: 0.5rem;
+      color: var(--primary);
+    }
+
+    .price {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: var(--primary);
+      margin: 1rem 0;
+    }
+
+    /* Benefícios */
+    .benefits {
+      background: #111;
+    }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+    }
+
+    .benefit-card {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .benefit-card i {
+      font-size: 4rem;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Testemunhos */
+    .testimonial {
+      background: var(--gray);
+      padding: 2rem;
+      border-radius: 20px;
+      font-style: italic;
+    }
+
+    /* Footer */
+    footer {
+      background: #000;
+      padding: 4rem 0 2rem;
+    }
+
+    .footer-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+
+    .glow {
+      text-shadow: 0 0 20px var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <nav>
+      <a href="#" class="logo">
+        <i class="fas fa-gamepad"></i> LEVEL UP
+      </a>
+      <ul class="nav-links">
+        <li><a href="#cursos">Cursos</a></li>
+        <li><a href="#sobre">Sobre</a></li>
+        <li><a href="#comunidade">Comunidade</a></li>
+        <li><a href="#blog">Blog</a></li>
+      </ul>
+      <button class="btn-login">Entrar</button>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="glow">LEVEL UP ACADEMY</h1>
+      <p>Transforme sua paixão por games em uma <strong>carreira profissional</strong></p>
+      <button class="cta-button" onclick="document.getElementById('cursos').scrollIntoView({behavior: 'smooth'})">
+        COMEÇAR AGORA
+      </button>
+      <p style="margin-top: 3rem; font-size: 1.1rem;">
+        <i class="fas fa-users"></i> +12.450 alunos já evoluíram com a gente
+      </p>
+    </div>
+  </section>
+
+  <!-- CURSOS -->
+  <section id="cursos">
+    <div class="container">
+      <h2>Nossos Cursos em Destaque</h2>
+      <div class="courses-grid">
+
+        <div class="course-card">
+          <img src="https://images.unsplash.com/photo-1616588587683-9c0b0f4f4f5f?w=600" alt="Unity">
+          <div class="course-info">
+            <h3>Unity 3D do Zero ao Avançado</h3>
+            <p>Crie jogos profissionais para PC, Mobile e Consoles</p>
+            <div class="price">R$ 497</div>
+            <button class="cta-button" style="width: 100%; padding: 14px;">Matricular-se</button>
+          </div>
+        </div>
+
+        <div class="course-card">
+          <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=600" alt="Unreal">
+          <div class="course-info">
+            <h3>Unreal Engine 5 Mastery</h3>
+            <p>Gráficos AAA, Blueprints e Nanite</p>
+            <div class="price">R$ 697</div>
+            <button class="cta-button" style="width: 100%; padding: 14px;">Matricular-se</button>
+          </div>
+        </div>
+
+        <div class="course-card">
+          <img src="https://images.unsplash.com/photo-1551105373-9c3f8c0c4d3f?w=600" alt="Godot">
+          <div class="course-info">
+            <h3>Godot 4 - 2D & 3D Completo</h3>
+            <p>Desenvolvimento leve e poderoso</p>
+            <div class="price">R$ 397</div>
+            <button class="cta-button" style="width: 100%; padding: 14px;">Matricular-se</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- BENEFÍCIOS -->
+  <section class="benefits">
+    <div class="container">
+      <h2>Por que escolher a Level Up?</h2>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <i class="fas fa-graduation-cap"></i>
+          <h3>Projetos Reais</h3>
+          <p>Você sai com portfólio profissional completo</p>
+        </div>
+        <div class="benefit-card">
+          <i class="fas fa-users"></i>
+          <h3>Comunidade Ativa</h3>
+          <p>Discord exclusivo com mentores e alunos</p>
+        </div>
+        <div class="benefit-card">
+          <i class="fas fa-trophy"></i>
+          <h3>Certificado</h3>
+          <p>Reconhecido no mercado de games</p>
+        </div>
+        <div class="benefit-card">
+          <i class="fas fa-clock"></i>
+          <h3>Acesso Vitalício</h3>
+          <p>Atualizações constantes sem custo extra</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTEMUNHOS -->
+  <section>
+    <div class="container">
+      <h2>O que nossos alunos dizem</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 2rem;">
+        <div class="testimonial">
+          <p>"Consegui meu primeiro emprego como Junior Game Developer após 4 meses de curso!"</p>
+          <strong>— Lucas Mendes, Desenvolvedor na Hoplon</strong>
+        </div>
+        <div class="testimonial">
+          <p>"O melhor investimento que fiz na minha vida. O suporte é incrível!"</p>
+          <strong>— Beatriz Costa, Indie Developer</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-content">
+      <div>
+        <h3>Level Up Academy</h3>
+        <p>Formando a próxima geração de desenvolvedores de games do Brasil.</p>
+      </div>
+      <div>
+        <h4>Links Rápidos</h4>
+        <p>Cursos<br>Comunidade<br>Eventos<br>Carreiras</p>
+      </div>
+      <div>
+        <h4>Contato</h4>
+        <p>contato@levelup.academy<br>(11) 98765-4321</p>
+      </div>
+    </div>
+    <div style="text-align: center; padding-top: 2rem; border-top: 1px solid #333;">
+      <p>&copy; 2026 Level Up Academy - Projeto Escolar</p>
+    </div>
+  </footer>
+
+  <script>
+    // Menu mobile (caso queira expandir depois)
+    console.log("%cLevel Up Academy carregada com sucesso! 🚀", "color: #00ff9d; font-size: 16px;");
+
+    // Animação suave ao rolar
+    window.addEventListener('scroll', () => {
+      const cards = document.querySelectorAll('.course-card');
+      cards.forEach((card, index) => {
+        if (card.getBoundingClientRect().top < window.innerHeight - 100) {
+          card.style.opacity = '1';
+          card.style.transform = 'translateY(0)';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
